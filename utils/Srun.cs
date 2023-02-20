@@ -3,13 +3,19 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using SrunEncryption;
+using BUAALogin.Encryption;
+using BUAALogin.Storge;
 
-namespace SrunLogin
+namespace BUAALogin.SrunLogin
 {
     public class SrunLoginClass
     {
-
+        public SrunLoginClass()
+        {
+            IDataManager dataManager = new DataManager();
+            (this.username, this.password) = dataManager.GetUser();
+            // Console.WriteLine($"{username}");
+        }
         private string getIPAPI = "srun_portal_pc?ac_id=1&theme=buaa";
         private string getChallengeApi = "cgi-bin/get_challenge";
         private string srunPortalApi = "cgi-bin/srun_portal";
@@ -132,6 +138,17 @@ namespace SrunLogin
             }
         }
 
+        private async Task GetInfoPage()
+        {
+            var getPortalResponse = await client.GetAsync(getInfoApi);
+            var responseText = await getPortalResponse.Content.ReadAsStringAsync();
+            lock (Console.Out)
+            {
+                Console.WriteLine(responseText);
+                Console.WriteLine();
+            }
+        }
+
         public async Task Login()
         {
             InitializeHTTPClient();
@@ -139,6 +156,7 @@ namespace SrunLogin
             await GetToken();
             Encode();
             await FinalRequest();
+            await GetInfoPage();
         }
     }
 }

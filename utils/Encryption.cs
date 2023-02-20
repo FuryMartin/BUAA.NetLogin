@@ -1,8 +1,9 @@
 using System;
 using System.Text;
 using System.Security.Cryptography;
+using System.IO;
 
-namespace SrunEncryption
+namespace BUAALogin.Encryption
 {
     public class Base64Encoder
     {
@@ -162,4 +163,65 @@ namespace SrunEncryption
             return LEncode(pwd, false);
         }
     }
+    public static class AesEncryption
+    {
+        private static byte[] Key = Encoding.UTF8.GetBytes("YG5^v%bb&FX6YS!Y");
+        private static byte[] IV = Encoding.UTF8.GetBytes("36JGQ%bYssG$k*v#");
+
+        public static string EncryptString(string plainText)
+        {
+            byte[] encrypted;
+
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = Key;
+                aes.IV = IV;
+
+                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter sw = new StreamWriter(cs))
+                        {
+                            sw.Write(plainText);
+                        }
+
+                        encrypted = ms.ToArray();
+                    }
+                }
+            }
+
+            return Convert.ToBase64String(encrypted);
+        }
+
+        public static string DecryptString(string cipherText)
+        {
+            byte[] cipherBytes = Convert.FromBase64String(cipherText);
+
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = Key;
+                aes.IV = IV;
+
+                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+                using (MemoryStream ms = new MemoryStream(cipherBytes))
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader sr = new StreamReader(cs))
+                        {
+                            return sr.ReadToEnd();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
+
+
+

@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using SrunLogin;
-using SrunEncryption;
+using BUAALogin.SrunLogin;
+using BUAALogin.Encryption;
+using BUAALogin.Storge;
 
 namespace BUAALogin
 {
