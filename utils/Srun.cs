@@ -44,7 +44,7 @@ namespace SrunLogin
             client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
             client.DefaultRequestHeaders.Add("Connection", "keep-alive");
         }
-        public async Task GetIP()
+        private async Task GetIP()
         {
             var response = await client.GetAsync(getIPAPI);
             responseText = await response.Content.ReadAsStringAsync();
@@ -52,7 +52,7 @@ namespace SrunLogin
             Console.WriteLine("ip:" + ip + "\n");
         }
 
-        public async Task GetToken()
+        private async Task GetToken()
         {
             var getChallengeParams = new string[]
             {
@@ -130,8 +130,8 @@ namespace SrunLogin
                 Console.WriteLine(responseText);
                 Console.WriteLine();
             }
-            //改写login函数即可
         }
+
         public async Task Login()
         {
             InitializeHTTPClient();

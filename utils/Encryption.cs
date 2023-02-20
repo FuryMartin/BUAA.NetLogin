@@ -18,7 +18,7 @@ namespace SrunEncryption
         {
             string base64 = "";
             if (byteArray.Count() == 0)
-                return "";
+                throw new Exception("GetBase64()异常，传入参数为空");
             int imax = byteArray.Count() - byteArray.Count() % 3;
             for(int i = 0; i<imax;i+=3)
             {
@@ -44,7 +44,7 @@ namespace SrunEncryption
         public string GetMD5(string? password, string? token)
         {
             if(string.IsNullOrEmpty(password) || string.IsNullOrEmpty(token))
-                return "";
+                throw new Exception("GetMD5()异常，传入参数为空");
             byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
             byte[] tokenBytes = Encoding.UTF8.GetBytes(token);
 
@@ -85,14 +85,14 @@ namespace SrunEncryption
             return pwd;
         }
 
-        public byte[]? LEncode(List<long> msg, bool key)
+        public byte[] LEncode(List<long> msg, bool key)
         {
             int len = (msg.Count-1) << 2;
             if (key)
             {
                 char m = (char)msg[-1];
                 if (m < len-3 || m > len)
-                    return null;
+                    throw new Exception("LEncode异常");
                 len = m;
             }
             string[] msg_string = new string[msg.Count];
@@ -104,7 +104,6 @@ namespace SrunEncryption
                 byteList.Add((byte)(msg[i] >> 8  & 0xff));
                 byteList.Add((byte)(msg[i] >> 16 & 0xff));
                 byteList.Add((byte)(msg[i] >> 24 & 0xff));
-                //  ""+char.ConvertFromUtf32((int)(msg[i] & 0xff)) + char.ConvertFromUtf32((int)(msg[i]>>8 & 0xff)) + char.ConvertFromUtf32((int)(msg[i] >> 16 & 0xff)) + char.ConvertFromUtf32((int)(msg[i] >> 24 & 0xff));
             }
             byte[] byteArray = byteList.ToArray();
             if (key)
@@ -114,10 +113,10 @@ namespace SrunEncryption
             return byteArray;
         }
 
-        public byte[]? GetXEncode(string? msg, string? key)
+        public byte[] GetXEncode(string? msg, string? key)
         {
             if(string.IsNullOrEmpty(msg) || string.IsNullOrEmpty(key))
-                return null;
+                throw new Exception("GetXEncode()异常，传入参数为空");
             var pwd = SEncode(msg, true);
             var pwdk = SEncode(key, false);
             if (pwdk.Count < 4)
