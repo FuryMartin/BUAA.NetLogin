@@ -1,9 +1,9 @@
 using System;
-using BUAALogin.SrunLogin;
-using BUAALogin.Encryption;
-using BUAALogin.Storge;
+using BUAA.NetLogin.SrunLogin;
+using BUAA.NetLogin.Encryption;
+using BUAA.NetLogin.Storge;
 
-namespace BUAALogin
+namespace BUAA.NetLogin
 {
     class Program{
         static async Task Main(string[] args)

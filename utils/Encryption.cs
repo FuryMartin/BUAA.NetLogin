@@ -3,7 +3,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace BUAALogin.Encryption
+namespace BUAA.NetLogin.Encryption
 {
     public class Base64Encoder
     {

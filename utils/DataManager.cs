@@ -1,8 +1,8 @@
 using System.Data.SQLite;
-using BUAALogin.Encryption;
+using BUAA.NetLogin.Encryption;
 using System.IO;
 
-namespace BUAALogin.Storge
+namespace BUAA.NetLogin.Storge
 {
     public class DataManager:IDataManager
     {
@@ -20,7 +20,7 @@ namespace BUAALogin.Storge
             }
         }
 
-        private const string databaseName = "BUAALogin.sqlite";
+        private const string databaseName = "BUAA.NetLogin.sqlite";
         private const string sqlPassword = "K@xB$m87bUa6aU";
         private const string connectionString = $"Data Source={databaseName};";
 

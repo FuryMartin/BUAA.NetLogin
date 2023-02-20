@@ -3,10 +3,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using BUAALogin.Encryption;
-using BUAALogin.Storge;
+using BUAA.NetLogin.Encryption;
+using BUAA.NetLogin.Storge;
 
-namespace BUAALogin.SrunLogin
+namespace BUAA.NetLogin.SrunLogin
 {
     public class SrunLoginClass
     {
