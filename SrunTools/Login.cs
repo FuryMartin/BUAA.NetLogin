@@ -1,26 +1,24 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using BUAA.NetLogin.Encryption;
-using BUAA.NetLogin.Storge;
+using Storge;
+using Interact;
+using ExceptionHandler;
 
-namespace BUAA.NetLogin.SrunLogin
+namespace SrunTools
 {
-    public class SrunLoginClass
+    public class Login
     {
-        public SrunLoginClass()
-        {
-            IDataManager dataManager = new DataManager();
+        public Login(IDataManager dataManager)
+        {   
             (this.username, this.password) = dataManager.GetUser();
-            // Console.WriteLine($"{username}");
+            if(string.IsNullOrEmpty(this.username) || string.IsNullOrEmpty(this.password))
+                InteractiveManager.ExceptionPrinter(new AccountNullError());
         }
         private string getIPAPI = "srun_portal_pc?ac_id=1&theme=buaa";
         private string getChallengeApi = "cgi-bin/get_challenge";
         private string srunPortalApi = "cgi-bin/srun_portal";
         private string getInfoApi="cgi-bin/rad_user_info?callback=jQuery112403076366133070929_1630949443031&_=1630949443033";
-        private string user_agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.26 Safari/537.36";
+        // private string user_agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.26 Safari/537.36";
 
         private string? username;
         private string? password;
@@ -52,14 +50,16 @@ namespace BUAA.NetLogin.SrunLogin
         }
         private async Task GetIP()
         {
+            InteractiveManager.ColorfulProgress("1","5","获取IP地址");
             var response = await client.GetAsync(getIPAPI);
             responseText = await response.Content.ReadAsStringAsync();
             ip = Regex.Match(responseText, "id=\"user_ip\" value=\"(.*?)\"").Groups[1].Value;
-            Console.WriteLine("ip:" + ip + "\n");
+            InteractiveManager.ColorfulProgress(ip);
         }
 
         private async Task GetToken()
         {
+            InteractiveManager.ColorfulProgress("2","5","获取Token");
             var getChallengeParams = new string[]
             {
                 "callback=jQuery112404953340710317169_" + (new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()).ToString(),
@@ -70,8 +70,7 @@ namespace BUAA.NetLogin.SrunLogin
             var getChallengeResponse = await client.GetAsync(getChallengeApi + "?" + string.Join("&", getChallengeParams));
             var responseText = await getChallengeResponse.Content.ReadAsStringAsync();
             token = Regex.Match(responseText, "\"challenge\":\"(.*?)\"").Groups[1].Value;
-            Console.WriteLine(responseText+"\n");
-            Console.WriteLine("token为:" + token+ "\n");
+            InteractiveManager.ColorfulProgress(token);
         }
 
         private string GetChksum()
@@ -104,14 +103,16 @@ namespace BUAA.NetLogin.SrunLogin
         }
         private void Encode()
         {
+            InteractiveManager.ColorfulProgress("3","5","进行XEncode加密");
             string msg = GetInfo();
             info = "{SRBX1}" + base64Encoder.GetBase64(XEncoder.GetXEncode(msg, token));
             hmd5 = md5Encoder.GetMD5(password, token);
             chksum = sha1Encoder.GetSHA1(GetChksum());
-            Console.WriteLine("完成所有加密工作\n");
+            InteractiveManager.ColorfulProgress("OK");
         }
         private async Task FinalRequest()
         {
+            InteractiveManager.ColorfulProgress("4", "5", "提交验证信息");
             var srun_portal_params = new string[]
             {
                 "callback=jQuery11240645308969735664_"+(new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()).ToString(),
@@ -131,32 +132,59 @@ namespace BUAA.NetLogin.SrunLogin
             };
             var getPortalResponse = await client.GetAsync(srunPortalApi + "?" + string.Join("&", srun_portal_params));
             var responseText = await getPortalResponse.Content.ReadAsStringAsync();
-            lock (Console.Out)
-            {
-                Console.WriteLine(responseText);
-                Console.WriteLine();
-            }
+            CheckSuccess(responseText);
+            // lock (Console.Out)
+            // {
+            //     Console.WriteLine(responseText);
+            //     Console.WriteLine();
+            // }
+            InteractiveManager.ColorfulProgress("OK");
         }
 
         private async Task GetInfoPage()
         {
+            InteractiveManager.ColorfulProgress("5", "5", "获取登录信息");
             var getPortalResponse = await client.GetAsync(getInfoApi);
             var responseText = await getPortalResponse.Content.ReadAsStringAsync();
-            lock (Console.Out)
+            if (CheckSuccess(responseText))
             {
-                Console.WriteLine(responseText);
-                Console.WriteLine();
+                InteractiveManager.ColorfulProgress("OK");
+                InteractiveManager.Success();
             }
         }
 
-        public async Task Login()
+        private bool CheckSuccess(string response)
         {
-            InitializeHTTPClient();
-            await GetIP();
-            await GetToken();
-            Encode();
-            await FinalRequest();
-            await GetInfoPage();
+            Regex resRegex = new Regex("\"res\":\"(\\w+)\"");
+            Match resMatch = resRegex.Match(response);
+            Regex errormsgRegex = new Regex("\"error_msg\":\"(.+?)\"");
+            Match errormsgMatch = errormsgRegex.Match(response);
+            if (resMatch.Success && errormsgMatch.Success)
+            {
+                string res = resMatch.Groups[1].Value;
+                if (res != "ok"){
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error\u001b[0m");
+                    InteractiveManager.ExceptionPrinter(new LoginFailError(errormsgMatch.Groups[1].Value));}
+            }
+            return true;
+        }
+
+        public async Task ExecuteLogin()
+        {
+            try
+            {
+                InitializeHTTPClient();
+                await GetIP();
+                await GetToken();
+                Encode();
+                await FinalRequest();
+                await GetInfoPage();
+            }
+            catch (System.Exception e)
+            {
+                InteractiveManager.ExceptionPrinter(e);
+            }
         }
     }
 }
