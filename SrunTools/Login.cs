@@ -51,10 +51,18 @@ namespace SrunTools
         private async Task GetIP()
         {
             InteractiveManager.ColorfulProgress("1","5","获取IP地址");
-            var response = await client.GetAsync(getIPAPI);
-            responseText = await response.Content.ReadAsStringAsync();
-            ip = Regex.Match(responseText, "id=\"user_ip\" value=\"(.*?)\"").Groups[1].Value;
-            InteractiveManager.ColorfulProgress(ip);
+            try{
+                var response = await client.GetAsync(getIPAPI);
+                responseText = await response.Content.ReadAsStringAsync();
+                ip = Regex.Match(responseText, "id=\"user_ip\" value=\"(.*?)\"").Groups[1].Value;
+                InteractiveManager.ColorfulProgress(ip);
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Error\u001b[0m");
+                InteractiveManager.ExceptionPrinter(e);
+            }
         }
 
         private async Task GetToken()
